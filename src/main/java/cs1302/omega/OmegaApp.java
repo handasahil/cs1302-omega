@@ -8,6 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
@@ -16,15 +17,29 @@ import javafx.stage.Stage;
  */
 public class OmegaApp extends Application {
 
+    Stage stage;
+    VBox mainPane;
+    Text message;
+
     /**
      * Constructs an {@code OmegaApp} object. This default (i.e., no argument)
      * constructor is executed in Step 2 of the JavaFX Application Life-Cycle.
      */
-    public OmegaApp() {}
+    public OmegaApp() {
+        mainPane = new VBox();
+        message = new Text("Testing javaFX");
+    }
+
+    @Override
+    public void init() {
+        mainPane.getChildren().add(message);
+    }
 
     /** {@inheritDoc} */
     @Override
     public void start(Stage stage) {
+
+        this.stage = stage;
 
         // demonstrate how to load local asset using "file:resources/"
         Image bannerImage = new Image("file:resources/readme-banner.png");
@@ -32,17 +47,10 @@ public class OmegaApp extends Application {
         banner.setPreserveRatio(true);
         banner.setFitWidth(640);
 
-        // some labels to display information
-        Label notice = new Label("Modify the starter code to suit your needs.");
-        Label instructions
-            = new Label("Move left/right with arrow keys; click rectangle to teleport.");
-
-        // demo game provided with the starter code
-        DemoGame game = new DemoGame(640, 240);
 
         // setup scene
-        VBox root = new VBox(banner, notice, instructions, game);
-        Scene scene = new Scene(root);
+        mainPane.getChildren().add(banner);
+        Scene scene = new Scene(mainPane);
 
         // setup stage
         stage.setTitle("OmegaApp!");
@@ -50,9 +58,6 @@ public class OmegaApp extends Application {
         stage.setOnCloseRequest(event -> Platform.exit());
         stage.sizeToScene();
         stage.show();
-
-        // play the game
-        game.play();
 
     } // start
 
