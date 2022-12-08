@@ -27,7 +27,7 @@ import com.google.gson.GsonBuilder;
  */
 public class GoogleBooksApi {
 
-//    final String apiKey = resources/config.getProperty("googleBooks.apikey");
+    private static final String apiKey = "AIzaSyBiLx_44pYN7U2zIl8DP7Uny0Nbb-7KaXk";
 
     private static class VolumeInfo {
         String title;
@@ -63,11 +63,11 @@ public class GoogleBooksApi {
         .setPrettyPrinting()                          // enable nice output when printing
         .create();                                    // builds and returns a Gson object
 
-    private static final String ENDPOINT = "https://www.googleapis.com/books/v1/volumes?q=search.json";
+    private static final String ENDPOINT = "https://www.googleapis.com/books/v1/volumes";
 
     public static void main(String[] args) {
         GoogleBooksApi
-            .search("the lord of the rings")
+            .search("the bad beginning")
             .ifPresent(response -> example1(response));
     } // main
 
@@ -96,11 +96,14 @@ public class GoogleBooksApi {
         System.out.printf("Searching for: %s\n", q);
         System.out.println("This may take some time to download...");
         try {
-            // String url =  String.format(
-            //     "%s?q=%s",
-            //     GoogleBooksApi.ENDPOINT,
-            //     URLEncoder.encode(q, StandardCharsets.UTF_8));
+            String url =  String.format(
+                "%s?q=%s",
+                GoogleBooksApi.ENDPOINT,
+                URLEncoder.encode(q, StandardCharsets.UTF_8));
+            url += "key=" + apiKey;
+            System.out.println("a: " + url);
             String newUrl = "https://www.googleapis.com/books/v1/volumes?q=the+bad+beginning+inauthor:snicket&key=AIzaSyBiLx_44pYN7U2zIl8DP7Uny0Nbb-7KaXk";
+            System.out.println("b: " + newUrl);
             String json = GoogleBooksApi.fetchString(newUrl);
             GoogleBooksResult result = GSON.fromJson(json, GoogleBooksResult.class);
             System.out.println("The result has been processed");
