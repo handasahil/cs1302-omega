@@ -9,6 +9,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.GridPane;
 import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
 import javafx.scene.control.Button;
@@ -42,6 +43,8 @@ public class OmegaApp extends Application {
     HBox searchTools;
     HBox bookInfo;
     VBox bookStats;
+    VBox authorSuggestions;
+    HBox otherWorks;
 
     TextField titleSearch;
     TextField authorSearch;
@@ -54,6 +57,17 @@ public class OmegaApp extends Application {
     Text language;
     Text publishedDate;
 
+    Text byAuthor;
+    GridPane booksContainer;
+    ImageView[] books;
+    // ImageView book1;
+    // ImageView book2;
+    // ImageView book3;
+    // ImageView book4;
+
+    String authorName;
+    String authorKey;
+    String[] otherBooks;
     /**
      * Constructs an {@code OmegaApp} object. This default (i.e., no argument)
      * constructor is executed in Step 2 of the JavaFX Application Life-Cycle.
@@ -63,6 +77,8 @@ public class OmegaApp extends Application {
         searchTools = new HBox();
         bookInfo = new HBox();
         bookStats = new VBox();
+        authorSuggestions = new VBox();
+        otherWorks = new HBox();
 
         titleSearch = new TextField("Search for a book");
         authorSearch = new TextField("Search for the author");
@@ -73,6 +89,19 @@ public class OmegaApp extends Application {
         author = new Text("Author: ");
         language = new Text("Language: ");
         publishedDate = new Text("Originally Published: ");
+
+        byAuthor = new Text("More by author: ");
+        booksContainer = new GridPane();
+        books = new ImageView[4];
+        for(int i = 0; i < books.length; i++) {
+            books[i] = new ImageView();
+        }
+        // book1 = new ImageView();
+        // book2 = new ImageView();
+        // book3 = new ImageView();
+        // book4 = new ImageView();
+
+        otherBooks = new String[4];
     }
 
     @Override
@@ -82,10 +111,39 @@ public class OmegaApp extends Application {
         bookCover.setFitWidth(300);
         bookCover.setPreserveRatio(true);
 
+        int i = 0;
+        for (ImageView cover : books) {
+            cover.setImage(image);
+            cover.setFitWidth(150);
+            cover.setPreserveRatio(true);
+            booksContainer.add(cover, i, 0);
+            i++;
+        }
+
+
+
+        // book1.setImage(image);
+        // book1.setFitWidth(150);
+        // book1.setPreserveRatio(true);
+
+        // book2.setImage(image);
+        // book2.setFitWidth(150);
+        // book2.setPreserveRatio(true);
+
+        // book3.setImage(image);
+        // book3.setFitWidth(150);
+        // book3.setPreserveRatio(true);
+
+        // book4.setImage(image);
+        // book4.setFitWidth(150);
+        // book4.setPreserveRatio(true);
+
         searchTools.getChildren().addAll(titleSearch, authorSearch, searchButton);
         bookStats.getChildren().addAll(title, author, language, publishedDate);
+        // otherWorks.getChildren().addAll(book1, book2, book3, book4);
+        authorSuggestions.getChildren().addAll(byAuthor, booksContainer);
         bookInfo.getChildren().addAll(bookCover, bookStats);
-        mainPane.getChildren().addAll(searchTools, bookInfo);
+        mainPane.getChildren().addAll(searchTools, bookInfo, authorSuggestions);
 
         EventHandler<ActionEvent> mouseClickHandler = (ActionEvent e) -> {
              this.loadBook(e);
@@ -142,6 +200,22 @@ public class OmegaApp extends Application {
         GoogleBooksItem[] items;
     } // OpenLibraryResult
 
+    private static class OpenLibraryDoc {
+        String key;
+    }
+
+    private static class OpenLibraryAuthorResult {
+        OpenLibraryDoc[] docs;
+    }
+
+    private static class OpenLibraryEntry {
+        String title;
+    }
+
+    private static class OpenLibraryWorksResult {
+        OpenLibraryEntry[] entries;
+    }
+
     /** HTTP client. */
     public static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
         .version(HttpClient.Version.HTTP_2)           // uses HTTP protocol version 2 where possible
@@ -153,12 +227,16 @@ public class OmegaApp extends Application {
         .setPrettyPrinting()                          // enable nice output when printing
         .create();                                    // builds and returns a Gson object
 
-    private static final String ENDPOINT = "https://www.googleapis.com/books/v1/volumes";
-
+    private static final String GOOGLE_ENDPOINT = "https://www.googleapis.com/books/v1/volumes";
+    private static final String OPEN_LIBRARY_ENDPOINT = "https://openlibrary.org/search/authors";
+    private static final String AUTHOR_WORKS_ENDPOINT = "https://openlibrary.org/authors/";
 
     private void loadBook(ActionEvent event) {
-        this.search(titleSearch.getText(), authorSearch.getText())
+        this.googleBooksSearch(titleSearch.getText(), authorSearch.getText())
             .ifPresent(response -> loadContent(response));
+        this.openLibraryAuthorSearch().ifPresent(response -> loadAuthorKey(response));
+        this.openLibraryWorksSearch();
+            // .ifPresent(response -> loadOtherBooks(response));
     }
 
     /**
@@ -171,19 +249,27 @@ public class OmegaApp extends Application {
         VolumeInfo info = book.volumeInfo;
 
         title.setText("Title: " + info.title);
-        author.setText("Author: " + book.volumeInfo.authors[0]);
-        language.setText("Language: " + book.volumeInfo.language);
+        author.setText("Author: " + info.authors[0]);
+        language.setText("Language: " + info.language);
         publishedDate.setText("Originally Published: " + book.volumeInfo.publishedDate);
+        authorName = info.authors[0];
+
+        System.out.println(book1.volumeInfo.authors[0]);
+        System.out.println(info.authors[0]);
+        System.out.println(book1.volumeInfo.imageLinks.thumbnail);
 
         if (info.imageLinks != null) {
             image = new Image(info.imageLinks.thumbnail);
-        } else if (book1.volumeInfo.authors[0] == info.authors[0]
-            && book1.volumeInfo.imageLinks != null) {
-            image = new Image(book1.volumeInfo.imageLinks.thumbnail);
         } else {
-            System.out.println("no available thumnail");
+            image = new Image(book1.volumeInfo.imageLinks.thumbnail);
         }
-        System.out.println("image url: " + result.items[0].volumeInfo.imageLinks.thumbnail);
+
+        //     if (book1.volumeInfo.authors[0] == info.authors[0]) {
+        //     image = new Image(book1.volumeInfo.imageLinks.thumbnail);
+        // } else {
+        //     System.out.println("no available thumnail");
+        // }
+
         bookCover.setImage(image);
         System.out.println("first title: " + result.items[0].volumeInfo.title);
         for (GoogleBooksItem item : result.items) {
@@ -198,19 +284,17 @@ public class OmegaApp extends Application {
      * @param q query string
      * @return an {@code Optional} describing the root element of the response
      */
-    private Optional<GoogleBooksResult> search(String title, String author) {
+    private Optional<GoogleBooksResult> googleBooksSearch(String title, String author) {
         System.out.printf("Searching for: %s\n", title);
         System.out.println("This may take some time to download...");
         try {
             String url =  String.format(
                 "%s?q=%s+%s%s",
-                this.ENDPOINT,
+                this.GOOGLE_ENDPOINT,
                 URLEncoder.encode(title, StandardCharsets.UTF_8),
                 "inauthor:",
                 URLEncoder.encode(author, StandardCharsets.UTF_8));
-            url += "&key=" + apiKey;
-            // System.out.println("a: " + url);
-//            String newUrl = "https://www.googleapis.com/books/v1/volumes?q=the+bad+beginning+inauthor:snicket&key=AIzaSyBiLx_44pYN7U2zIl8DP7Uny0Nbb-7KaXk";
+            url += "&langRestrict=en&key=" + apiKey;
             System.out.println("b: " + url);
             String json = this.fetchString(url);
             GoogleBooksResult result = GSON.fromJson(json, GoogleBooksResult.class);
@@ -219,6 +303,69 @@ public class OmegaApp extends Application {
         } catch (IllegalArgumentException | IOException | InterruptedException e) {
             System.out.println("The result is empty");
             return Optional.<GoogleBooksResult>empty();
+        } // try
+    } // search
+
+    private void loadAuthorKey(OpenLibraryAuthorResult result) {
+        authorKey = result.docs[0].key;
+        System.out.println("authorKey: " + authorKey);
+    }
+
+     /**
+     * Return an {@code Optional} describing the root element of the JSON
+     * response for a "search" query.
+     * @param q query string
+     * @return an {@code Optional} describing the root element of the response
+     */
+    public Optional<OpenLibraryAuthorResult> openLibraryAuthorSearch() {
+        System.out.printf("Searching for: %s\n", authorName);
+        System.out.println("This may take some time to download...");
+        try {
+            String url =  String.format(
+                "%s%s?q=%s",
+                this.OPEN_LIBRARY_ENDPOINT,
+                ".json",
+                URLEncoder.encode(authorName, StandardCharsets.UTF_8).replace("+", "%20"));
+            String json = this.fetchString(url);
+            OpenLibraryAuthorResult result = GSON.fromJson(json, OpenLibraryAuthorResult.class);
+            return Optional.<OpenLibraryAuthorResult>ofNullable(result);
+        } catch (IllegalArgumentException | IOException | InterruptedException e) {
+            return Optional.<OpenLibraryAuthorResult>empty();
+        } // try
+    } // search
+
+    // private void loadOtherBooks(OpenLibraryWorksResult result) {
+    //     for (int i = 0; i < otherBooks.length; i++) {
+    //         this.googleBooksSearch(result.entries[i].title, authorName)
+    //             .ifPresent(response -> loadImageURL(response, i));
+    //         Image otherCover = new Image(otherBooks[i]);
+    //         books[i].setImage(otherCover);
+    //     }
+    // }
+
+    // private void loadImageURL(GoogleBooksResult result, int i) {
+    //     if (result.items[0].volumeInfo.imageLinks != null) {
+    //         otherBooks[i] = result.items[0].volumeInfo.imageLinks.thumbnail;
+    //     }
+    //     otherBooks[i] = "https://st4.depositphotos.com/14953852/22772/v/600/depositphotos_227725020-stock-illustration-image-available-icon-flat-vector.jpg";
+    // }
+
+    /**
+     * Return an {@code Optional} describing the root element of the JSON
+     * response for a "search" query.
+     * @param q query string
+     * @return an {@code Optional} describing the root element of the response
+     */
+    public Optional<OpenLibraryWorksResult> openLibraryWorksSearch() {
+        System.out.printf("Searching for: %s\n", authorKey);
+        System.out.println("This may take some time to download...");
+        try {
+            String url = this.AUTHOR_WORKS_ENDPOINT + authorKey + "/works.json";
+            String json = this.fetchString(url);
+            OpenLibraryWorksResult result = GSON.fromJson(json, OpenLibraryWorksResult.class);
+            return Optional.<OpenLibraryWorksResult>ofNullable(result);
+        } catch (IllegalArgumentException | IOException | InterruptedException e) {
+            return Optional.<OpenLibraryWorksResult>empty();
         } // try
     } // search
 
@@ -242,7 +389,7 @@ public class OmegaApp extends Application {
             System.out.println("The request did not work");
             throw new IOException("response status code not 200:" + statusCode);
         } // if
-//        System.out.println(response.body());
+        System.out.println(response.body());
         return response.body();
 
     } // fetchString
