@@ -68,6 +68,7 @@ public class OmegaApp extends Application {
     String authorName;
     String authorKey;
     String[] otherBooks;
+    int loadedBooks;
     /**
      * Constructs an {@code OmegaApp} object. This default (i.e., no argument)
      * constructor is executed in Step 2 of the JavaFX Application Life-Cycle.
@@ -102,6 +103,7 @@ public class OmegaApp extends Application {
         // book4 = new ImageView();
 
         otherBooks = new String[4];
+        loadedBooks = 0;
     }
 
     @Override
@@ -235,8 +237,20 @@ public class OmegaApp extends Application {
         this.googleBooksSearch(titleSearch.getText(), authorSearch.getText())
             .ifPresent(response -> loadContent(response));
         this.openLibraryAuthorSearch().ifPresent(response -> loadAuthorKey(response));
-        this.openLibraryWorksSearch();
-            // .ifPresent(response -> loadOtherBooks(response));
+        this.openLibraryWorksSearch().ifPresent(response -> loadOtherBooks(response));
+        System.out.println("1st cover picture outside of method: " + otherBooks[0]);
+        for (int i = 0; i < otherBooks.length; i++) {
+            System.out.println("url at position " + i + ": " + otherBooks[i]);
+            Image otherCover = new Image(otherBooks[i]);
+            books[i].setImage(otherCover);
+        }
+
+        // Image otherCover = new Image(otherBooks[0]);
+        // books[0].setImage(otherCover);
+
+        // otherCover = new Image(otherBooks[1]);
+        // books[1].setImage(otherCover);
+
     }
 
     /**
@@ -294,7 +308,7 @@ public class OmegaApp extends Application {
                 URLEncoder.encode(title, StandardCharsets.UTF_8),
                 "inauthor:",
                 URLEncoder.encode(author, StandardCharsets.UTF_8));
-            url += "&langRestrict=en&key=" + apiKey;
+            url += "&key=" + apiKey;
             System.out.println("b: " + url);
             String json = this.fetchString(url);
             GoogleBooksResult result = GSON.fromJson(json, GoogleBooksResult.class);
@@ -334,21 +348,32 @@ public class OmegaApp extends Application {
         } // try
     } // search
 
-    // private void loadOtherBooks(OpenLibraryWorksResult result) {
-    //     for (int i = 0; i < otherBooks.length; i++) {
-    //         this.googleBooksSearch(result.entries[i].title, authorName)
-    //             .ifPresent(response -> loadImageURL(response, i));
-    //         Image otherCover = new Image(otherBooks[i]);
-    //         books[i].setImage(otherCover);
-    //     }
-    // }
+    private void loadOtherBooks(OpenLibraryWorksResult result) {
+        int index = 0;
+        for (int i = 0; index < 4; i++) {
+            final int indexExt = index;
+            System.out.println("Other title: " + result.entries[i].title);
+            System.out.println("by this author: " + authorName);
+            this.googleBooksSearch(result.entries[i].title, authorName)
+                .ifPresent(response -> loadImageURL(response, indexExt));
+            if (otherBooks[index] != null) {
+                index++;
+            }
+        }
+    }
 
-    // private void loadImageURL(GoogleBooksResult result, int i) {
-    //     if (result.items[0].volumeInfo.imageLinks != null) {
-    //         otherBooks[i] = result.items[0].volumeInfo.imageLinks.thumbnail;
-    //     }
-    //     otherBooks[i] = "https://st4.depositphotos.com/14953852/22772/v/600/depositphotos_227725020-stock-illustration-image-available-icon-flat-vector.jpg";
-    // }
+    private void loadImageURL(GoogleBooksResult result, int index) {
+        if (result.items != null) {
+            if (result.items[0].volumeInfo.imageLinks != null) {
+                System.out.println("imageLink.thumbnail: " + result.items[0].volumeInfo.imageLinks.thumbnail);
+                otherBooks[index] = result.items[0].volumeInfo.imageLinks.thumbnail;
+                System.out.println("value should be changed: " + otherBooks[index]);
+            } else {
+                otherBooks[index] = null;
+            }
+        }
+        System.out.println("loaded url: " + otherBooks[index]);
+    }
 
     /**
      * Return an {@code Optional} describing the root element of the JSON
