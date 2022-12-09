@@ -232,8 +232,7 @@ public class OmegaApp extends Application {
     private static final String AUTHOR_WORKS_ENDPOINT = "https://openlibrary.org/authors/";
 
     private void loadBook(ActionEvent event) {
-        this.googleBooksSearch(titleSearch.getText(), authorSearch.getText())
-            .ifPresent(response -> loadContent(response));
+        this.loadContent(googleBooksSearch(titleSearch.getText(), authorSearch.getText()));
         this.openLibraryAuthorSearch().ifPresent(response -> loadAuthorKey(response));
         this.openLibraryWorksSearch();
             // .ifPresent(response -> loadOtherBooks(response));
@@ -284,7 +283,7 @@ public class OmegaApp extends Application {
      * @param q query string
      * @return an {@code Optional} describing the root element of the response
      */
-    private Optional<GoogleBooksResult> googleBooksSearch(String title, String author) {
+    private GoogleBooksResult googleBooksSearch(String title, String author) {
         System.out.printf("Searching for: %s\n", title);
         System.out.println("This may take some time to download...");
         try {
@@ -299,10 +298,10 @@ public class OmegaApp extends Application {
             String json = this.fetchString(url);
             GoogleBooksResult result = GSON.fromJson(json, GoogleBooksResult.class);
             System.out.println("The result has been processed");
-            return Optional.<GoogleBooksResult>ofNullable(result);
+            return result;
         } catch (IllegalArgumentException | IOException | InterruptedException e) {
             System.out.println("The result is empty");
-            return Optional.<GoogleBooksResult>empty();
+            throw new Exception("The request did not work");
         } // try
     } // search
 
