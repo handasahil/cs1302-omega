@@ -69,6 +69,7 @@ public class OmegaApp extends Application {
     String authorKey;
     String[] otherBooks;
     int loadedBooks;
+
     /**
      * Constructs an {@code OmegaApp} object. This default (i.e., no argument)
      * constructor is executed in Step 2 of the JavaFX Application Life-Cycle.
@@ -94,13 +95,9 @@ public class OmegaApp extends Application {
         byAuthor = new Text("More by author: ");
         booksContainer = new GridPane();
         books = new ImageView[4];
-        for(int i = 0; i < books.length; i++) {
+        for (int i = 0; i < books.length; i++) {
             books[i] = new ImageView();
         }
-        // book1 = new ImageView();
-        // book2 = new ImageView();
-        // book3 = new ImageView();
-        // book4 = new ImageView();
 
         otherBooks = new String[4];
         loadedBooks = 0;
@@ -108,11 +105,12 @@ public class OmegaApp extends Application {
 
     @Override
     public void init() {
-        image = new Image("https://arthurmillerfoundation.org/wp-content/uploads/2018/06/default-placeholder.png");
+        image = new Image("https://arthurmillerfoundation.org/wp-content/uploads/2018/06/default-placeholder.pnOAg");
         bookCover.setImage(image);
         bookCover.setFitWidth(300);
         bookCover.setPreserveRatio(true);
 
+        booksContainer.setHgap(5);
         int i = 0;
         for (ImageView cover : books) {
             cover.setImage(image);
@@ -122,33 +120,17 @@ public class OmegaApp extends Application {
             i++;
         }
 
-
-
-        // book1.setImage(image);
-        // book1.setFitWidth(150);
-        // book1.setPreserveRatio(true);
-
-        // book2.setImage(image);
-        // book2.setFitWidth(150);
-        // book2.setPreserveRatio(true);
-
-        // book3.setImage(image);
-        // book3.setFitWidth(150);
-        // book3.setPreserveRatio(true);
-
-        // book4.setImage(image);
-        // book4.setFitWidth(150);
-        // book4.setPreserveRatio(true);
-
         searchTools.getChildren().addAll(titleSearch, authorSearch, searchButton);
+        bookStats.setSpacing(5);
         bookStats.getChildren().addAll(title, author, language, publishedDate);
-        // otherWorks.getChildren().addAll(book1, book2, book3, book4);
         authorSuggestions.getChildren().addAll(byAuthor, booksContainer);
+        bookInfo.setSpacing(10);
         bookInfo.getChildren().addAll(bookCover, bookStats);
+        mainPane.setSpacing(5);
         mainPane.getChildren().addAll(searchTools, bookInfo, authorSuggestions);
 
         EventHandler<ActionEvent> mouseClickHandler = (ActionEvent e) -> {
-             this.loadBook(e);
+            this.loadBook(e);
         };
 
         searchButton.setOnAction(mouseClickHandler);
@@ -171,8 +153,11 @@ public class OmegaApp extends Application {
 
     } // start
 
-    private static final String apiKey = "AIzaSyBiLx_44pYN7U2zIl8DP7Uny0Nbb-7KaXk";
+    private static final String API_KEY = "AIzaSyBiLx_44pYN7U2zIl8DP7Uny0Nbb-7KaXk";
 
+    /**
+     * Represents volume info inside of a Google Books API item.
+     */
     private static class VolumeInfo {
         String title;
         String[] authors;
@@ -181,6 +166,9 @@ public class OmegaApp extends Application {
         String language;
     }
 
+    /**
+     * Represents image links inside of a Google Books API item's volume info.
+     */
     private static class ImageLinks {
         String thumbnail;
     }
@@ -188,7 +176,7 @@ public class OmegaApp extends Application {
     /**
      * Represents a Google Books API item.
      */
-    private static class GoogleBooksItem{
+    private static class GoogleBooksItem {
         String kind;
         String id;
         VolumeInfo volumeInfo;
@@ -202,18 +190,30 @@ public class OmegaApp extends Application {
         GoogleBooksItem[] items;
     } // OpenLibraryResult
 
+    /**
+     * Represents an Open Library API doc.
+     */
     private static class OpenLibraryDoc {
         String key;
     }
 
+    /**
+     * Represents an Open Library API result when searching for an author.
+     */
     private static class OpenLibraryAuthorResult {
         OpenLibraryDoc[] docs;
     }
 
+    /**
+     * Represents an Open Library API entry.
+     */
     private static class OpenLibraryEntry {
         String title;
     }
 
+    /**
+     * Represents an Open Library API result when searching for an author's works.
+     */
     private static class OpenLibraryWorksResult {
         OpenLibraryEntry[] entries;
     }
@@ -233,29 +233,26 @@ public class OmegaApp extends Application {
     private static final String OPEN_LIBRARY_ENDPOINT = "https://openlibrary.org/search/authors";
     private static final String AUTHOR_WORKS_ENDPOINT = "https://openlibrary.org/authors/";
 
+    /**
+     * Occurs when the search button is pressed. Calls specific methods to load desired content.
+     * @param event the ActionEvent that triggered the loadBook method
+     */
     private void loadBook(ActionEvent event) {
         this.googleBooksSearch(titleSearch.getText(), authorSearch.getText())
             .ifPresent(response -> loadContent(response));
         this.openLibraryAuthorSearch().ifPresent(response -> loadAuthorKey(response));
         this.openLibraryWorksSearch().ifPresent(response -> loadOtherBooks(response));
-        System.out.println("1st cover picture outside of method: " + otherBooks[0]);
+
         for (int i = 0; i < otherBooks.length; i++) {
-            System.out.println("url at position " + i + ": " + otherBooks[i]);
             Image otherCover = new Image(otherBooks[i]);
             books[i].setImage(otherCover);
         }
 
-        // Image otherCover = new Image(otherBooks[0]);
-        // books[0].setImage(otherCover);
-
-        // otherCover = new Image(otherBooks[1]);
-        // books[1].setImage(otherCover);
-
     }
 
     /**
-     * An example of some things you can do with a response.
-     * @param result the ope library search result
+     * Loads a book's content onto the app page.
+     * @param result the Google Books search result
      */
     private void loadContent(GoogleBooksResult result) {
         GoogleBooksItem book = result.items[0];
@@ -278,12 +275,6 @@ public class OmegaApp extends Application {
             image = new Image(book1.volumeInfo.imageLinks.thumbnail);
         }
 
-        //     if (book1.volumeInfo.authors[0] == info.authors[0]) {
-        //     image = new Image(book1.volumeInfo.imageLinks.thumbnail);
-        // } else {
-        //     System.out.println("no available thumnail");
-        // }
-
         bookCover.setImage(image);
         System.out.println("first title: " + result.items[0].volumeInfo.title);
         for (GoogleBooksItem item : result.items) {
@@ -295,7 +286,8 @@ public class OmegaApp extends Application {
         /**
      * Return an {@code Optional} describing the root element of the JSON
      * response for a "search" query.
-     * @param q query string
+     * @param title title of the book
+     * @param author author of the book
      * @return an {@code Optional} describing the root element of the response
      */
     private Optional<GoogleBooksResult> googleBooksSearch(String title, String author) {
@@ -308,7 +300,7 @@ public class OmegaApp extends Application {
                 URLEncoder.encode(title, StandardCharsets.UTF_8),
                 "inauthor:",
                 URLEncoder.encode(author, StandardCharsets.UTF_8));
-            url += "&key=" + apiKey;
+            url += "&key=" + API_KEY;
             System.out.println("b: " + url);
             String json = this.fetchString(url);
             GoogleBooksResult result = GSON.fromJson(json, GoogleBooksResult.class);
@@ -320,6 +312,10 @@ public class OmegaApp extends Application {
         } // try
     } // search
 
+    /**
+     * Assigns a value so that the author's key can be referenced when searching for their works.
+     * @param result the Open Library Result
+     */
     private void loadAuthorKey(OpenLibraryAuthorResult result) {
         authorKey = result.docs[0].key;
         System.out.println("authorKey: " + authorKey);
@@ -328,7 +324,6 @@ public class OmegaApp extends Application {
      /**
      * Return an {@code Optional} describing the root element of the JSON
      * response for a "search" query.
-     * @param q query string
      * @return an {@code Optional} describing the root element of the response
      */
     public Optional<OpenLibraryAuthorResult> openLibraryAuthorSearch() {
@@ -348,6 +343,10 @@ public class OmegaApp extends Application {
         } // try
     } // search
 
+     /**
+     * Finds and stores the URL for 4 different books written by the author.
+     * @param result the Open Library Result
+     */
     private void loadOtherBooks(OpenLibraryWorksResult result) {
         int index = 0;
         for (int i = 0; index < 4; i++) {
@@ -362,10 +361,17 @@ public class OmegaApp extends Application {
         }
     }
 
+    /**
+     * Assesses the URL found for a specific work. If null, that specific work is not
+     * displayed in the app.
+     * @param result the Open Library Result
+     * @param index the index at which the URL should be assigned in {@code otherBooks}
+     */
     private void loadImageURL(GoogleBooksResult result, int index) {
         if (result.items != null) {
             if (result.items[0].volumeInfo.imageLinks != null) {
-                System.out.println("imageLink.thumbnail: " + result.items[0].volumeInfo.imageLinks.thumbnail);
+                System.out.println("imageLink.thumbnail: " +
+                    result.items[0].volumeInfo.imageLinks.thumbnail);
                 otherBooks[index] = result.items[0].volumeInfo.imageLinks.thumbnail;
                 System.out.println("value should be changed: " + otherBooks[index]);
             } else {
@@ -378,7 +384,6 @@ public class OmegaApp extends Application {
     /**
      * Return an {@code Optional} describing the root element of the JSON
      * response for a "search" query.
-     * @param q query string
      * @return an {@code Optional} describing the root element of the response
      */
     public Optional<OpenLibraryWorksResult> openLibraryWorksSearch() {
