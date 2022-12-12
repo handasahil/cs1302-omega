@@ -33,7 +33,9 @@ import java.util.Optional;
 
 
 /**
- * REPLACE WITH NON-SHOUTING DESCRIPTION OF YOUR APP.
+ * This app takes in a book title and author name and returns the book's cover
+ * along with statistics about the book. The app also shows the covers of 4 other
+ * books written by that author.
  */
 public class OmegaApp extends Application {
 
@@ -60,15 +62,13 @@ public class OmegaApp extends Application {
     Text byAuthor;
     GridPane booksContainer;
     ImageView[] books;
-    // ImageView book1;
-    // ImageView book2;
-    // ImageView book3;
-    // ImageView book4;
 
     String authorName;
     String authorKey;
     String[] otherBooks;
     int loadedBooks;
+
+    Text attribution;
 
     /**
      * Constructs an {@code OmegaApp} object. This default (i.e., no argument)
@@ -101,11 +101,14 @@ public class OmegaApp extends Application {
 
         otherBooks = new String[4];
         loadedBooks = 0;
+
+        String credit = " information courtesy of Google Books and Open Library API";
+        attribution = new Text("images courtesy of Google Books API \n " + credit);
     }
 
     @Override
     public void init() {
-        image = new Image("https://arthurmillerfoundation.org/wp-content/uploads/2018/06/default-placeholder.pnOAg");
+        image = new Image("file:resources/default-placeholder.png");
         bookCover.setImage(image);
         bookCover.setFitWidth(300);
         bookCover.setPreserveRatio(true);
@@ -127,7 +130,7 @@ public class OmegaApp extends Application {
         bookInfo.setSpacing(10);
         bookInfo.getChildren().addAll(bookCover, bookStats);
         mainPane.setSpacing(5);
-        mainPane.getChildren().addAll(searchTools, bookInfo, authorSuggestions);
+        mainPane.getChildren().addAll(searchTools, bookInfo, authorSuggestions, attribution);
 
         EventHandler<ActionEvent> mouseClickHandler = (ActionEvent e) -> {
             this.loadBook(e);

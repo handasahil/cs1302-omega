@@ -16,3 +16,9 @@ authored by members of your project team.
   - dogchicken. 2012. "Cat Fighter Sprite Sheet"
   - https://opengameart.org/content/cat-fighter-sprite-sheet
   - CC-BY 3.0
+
+* Default Placeholder Image
+  - `resources/default-placeholder.png`
+  - Arthur Miller Foundation. 2013. "default-placeholder"
+  - https://arthurmillerfoundation.org/who-we-are/our-team/default-placeholder/
+  - Assumed Proprietary
