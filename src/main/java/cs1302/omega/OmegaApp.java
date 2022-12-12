@@ -103,7 +103,7 @@ public class OmegaApp extends Application {
         loadedBooks = 0;
 
         String credit = " information courtesy of Google Books and Open Library API";
-        attribution = new Text("images courtesy of Google Books API \n " + credit);
+        attribution = new Text(" images courtesy of Google Books API \n" + credit);
     }
 
     @Override
